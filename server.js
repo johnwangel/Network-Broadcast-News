@@ -2,6 +2,7 @@
 const net = require('net');
 
 let serverArray = [];
+let handle = false;
 
 //ADMIN MESSAGE
 var server = net.createServer( function ( connection ) {
@@ -21,16 +22,21 @@ var server = net.createServer( function ( connection ) {
   //LISTENER FOR THE CONNECTION
   connection.on('data', data => {
 
-    let handle = false;
-    let admin = false;
+    data = String(data).replace(/\r?\n|\r/, '');
 
     //FIRST MESSAGE FROM USER SETS USERNAME
     if (userName.includes('User')) {
       let oldName = userName;
-      userName = String(data).replace(/\r?\n|\r/, '');
-      admin = userName.toLowerCase().includes('admin');
+      userName = data;
+      let admin = (() => {
+        if (userName.toLowerCase().includes('admin') || userName.includes(' ')) {
+          return true;
+        } else {
+          return false;
+        }
+      })();
       if (admin) {
-        connection.write(`User name cannot contain [admin]!`);
+        connection.write(`[ADMIN] User name cannot contain [admin] or spaces! Please type a new name.`);
         userName = oldName;
         return;
       }
@@ -38,7 +44,8 @@ var server = net.createServer( function ( connection ) {
       //MESSAGE WHEN USER JOINS
       for (let connections in serverArray){
         if (oldName === serverArray[connections].name) { serverArray[connections].name = userName; }
-        serverArray[connections].socket.write(`${userName} has joined us!\n`);
+        serverArray[connections].socket.write(`${userName} has joined us!`);
+        //To prevent it from broadcasting.
         handle = true;
       }
     }
@@ -51,6 +58,7 @@ var server = net.createServer( function ( connection ) {
         }
       }
     }
+    //resets handle if it was true when it got here.
     handle = false;
   });
 
