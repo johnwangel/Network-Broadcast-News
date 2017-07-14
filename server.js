@@ -29,14 +29,30 @@ var server = net.createServer( function ( connection ) {
       let oldName = userName;
       userName = data;
       let admin = (() => {
-        if (userName.toLowerCase().includes('admin') || userName.includes(' ')) {
-          return true;
+        if (userName.toLowerCase().includes('admin')) {
+          return 1;
+        } else if (userName.includes(' ')) {
+          return 2;
+        } else if ( checkForUser(userName) > -1 ) {
+          return 3;
         } else {
           return false;
         }
       })();
-      if (admin) {
-        connection.write(`[ADMIN] User name cannot contain [admin] or spaces! Please type a new name.`);
+      if (admin !== false) {
+        switch (admin) {
+          case 1:
+            connection.write(`[ADMIN] User name cannot contain [admin]! Please type a new name.`);
+            break;
+          case 2:
+            connection.write(`[ADMIN] User name cannot contain spaces! Please type a new name.`);
+            break;
+          case 3:
+            connection.write(`[ADMIN] That name is taken! Please type a new name.`);
+            break;
+          default:
+            connection.write(`[ADMIN] That is not a valid name! Please type a new name.`);
+        }
         userName = oldName;
         return;
       }
@@ -75,14 +91,40 @@ var server = net.createServer( function ( connection ) {
       i++;
     }
   });
-
 });
 
 server.listen({ port: 6969, address: '0.0.0.0' });
 
 //ADMIN BROADCAST
 process.stdin.on('data', data  => {
+  data = String(data).replace(/\r?\n|\r/, '');
+  if (data.indexOf('\\kick') !== -1) {
+    let parseData = data.split(' ');
+    let user = parseData[1];
+    let idx = checkForUser( user );
+    if ( idx > -1 ) {
+      removeUser( user, idx );
+      data = `${user} has been ousted!`;
+    } else {
+      console.log('That user does not exist.');
+      return;
+    }
+  }
+
   for (let connections in serverArray){
     serverArray[connections].socket.write(`[ADMIN] ${data}`);
   }
 });
+
+function checkForUser( checkName ) {
+  var userNames = serverArray.map( list => list.name );
+  if (userNames.some( names => checkName )){
+    return userNames.indexOf( checkName );
+  }
+  return false;
+}
+
+function removeUser( user, idx ){
+  serverArray[idx].socket.destroy();
+  serverArray.splice(idx);
+}
