@@ -25,12 +25,12 @@ var server = net.createServer( function ( connection ) {
     data = String(data).replace(/\r?\n|\r/, '');
 
     //FIRST MESSAGE FROM USER SETS USERNAME
-    if (userName.includes('User')) {
+    if (userName.includes( 'User' ) ) {
       let oldName = userName;
       userName = data;
       let nameOK = checkNameStructure( userName );
       if ( nameOK !== false ) {
-        connection.write(getMessage(nameOK));
+        connection.write( getMessage( nameOK ) );
         userName = oldName;
         return;
       }
@@ -39,8 +39,8 @@ var server = net.createServer( function ( connection ) {
       for (let connections in serverArray){
         if (oldName === serverArray[connections].name) { serverArray[connections].name = userName; }
         serverArray[connections].socket.write(`${userName} has joined us!`);
-        //To prevent it from broadcasting.
         console.log(`${userName} (ip: ${serverArray[connections].socket.remotePort}) has been added.`);
+        //To prevent it from broadcasting.
         handle = true;
       }
     }
@@ -76,17 +76,13 @@ server.listen({ port: 6969, address: '0.0.0.0' });
 
 //ADMIN BROADCAST
 process.stdin.on('data', data  => {
-  data = String(data).replace(/\r?\n|\r/, '');
+  data = String(data).replace( /\r?\n|\r/, '');
   if (data.indexOf('\\kick') !== -1) {
     if (data.includes(':')){
-      let ip = parseData[1].split(':');
-      let port = ip[1];
-      removePort( port );
+      removePort( parseData[1].split(':')[1] );
       data = `User ${port} has been ousted!`;
     } else {
-      let parseData = data.split(' ');
-      let user = parseData[1];
-      let idx = checkForUser( user );
+      let idx = checkForUser( data.split(' ')[1] );
       if ( idx > -1 ) {
         removeUser( user, idx );
         data = `${user} has been ousted!`;
