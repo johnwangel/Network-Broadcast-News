@@ -79,7 +79,7 @@ process.stdin.on('data', data  => {
   data = String(data).replace( /\r?\n|\r/, '');
   if (data.indexOf('\\kick') !== -1) {
     if (data.includes(':')){
-      removePort( parseData[1].split(':')[1] );
+      removePort( data.split(':')[1] );
       data = `User ${port} has been ousted!`;
     } else {
       let idx = checkForUser( data.split(' ')[1] );
