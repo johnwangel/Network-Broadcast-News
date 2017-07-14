@@ -28,7 +28,7 @@ var server = net.createServer( function ( connection ) {
     if (userName.includes('User')) {
       let oldName = userName;
       userName = data;
-      let admin = (() => {
+      let admin = ( () => {
         if (userName.toLowerCase().includes('admin')) {
           return 1;
         } else if (userName.includes(' ')) {
@@ -125,6 +125,10 @@ function checkForUser( checkName ) {
 }
 
 function removeUser( user, idx ){
-  serverArray[idx].socket.destroy();
+  let skt = serverArray[idx].socket;
+  skt.write( `[ADMIN] You're outta here, ${user}!`);
+  console.log(skt.remotePort);
+
+  skt.destroy();
   serverArray.splice(idx);
 }
