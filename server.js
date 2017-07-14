@@ -62,6 +62,7 @@ var server = net.createServer( function ( connection ) {
         if (oldName === serverArray[connections].name) { serverArray[connections].name = userName; }
         serverArray[connections].socket.write(`${userName} has joined us!`);
         //To prevent it from broadcasting.
+        console.log(`${userName} (ip: ${serverArray[connections].socket.remotePort}) has been added.`);
         handle = true;
       }
     }
@@ -100,14 +101,21 @@ process.stdin.on('data', data  => {
   data = String(data).replace(/\r?\n|\r/, '');
   if (data.indexOf('\\kick') !== -1) {
     let parseData = data.split(' ');
-    let user = parseData[1];
-    let idx = checkForUser( user );
-    if ( idx > -1 ) {
-      removeUser( user, idx );
-      data = `${user} has been ousted!`;
+    if (parseData[1].includes(':')){
+      let ip = parseData[1].split(':');
+      let port = ip[1];
+      removePort( port );
+      data = `User ${port} has been ousted!`;
     } else {
-      console.log('That user does not exist.');
-      return;
+      let user = parseData[1];
+      let idx = checkForUser( user );
+      if ( idx > -1 ) {
+        removeUser( user, idx );
+        data = `${user} has been ousted!`;
+      } else {
+        console.log('That user does not exist.');
+        return;
+      }
     }
   }
 
@@ -127,8 +135,21 @@ function checkForUser( checkName ) {
 function removeUser( user, idx ){
   let skt = serverArray[idx].socket;
   skt.write( `[ADMIN] You're outta here, ${user}!`);
-  console.log(skt.remotePort);
-
   skt.destroy();
   serverArray.splice(idx);
+}
+
+function removePort( port ) {
+  let i = 0;
+  port = Number(port);
+  for (let connections in serverArray){
+    skt = serverArray[connections].socket;
+    console.log('port 1 \'', typeof skt.remotePort, '\' port 2 \'', typeof port, '\'');
+    if (skt.remotePort === port ) {
+      skt.write( `[ADMIN] You're outta here, ${port}!`);
+      skt.destroy();
+      serverArray.splice(i);
+    }
+    i++;
+  }
 }
