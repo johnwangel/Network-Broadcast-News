@@ -28,19 +28,9 @@ var server = net.createServer( function ( connection ) {
     if (userName.includes('User')) {
       let oldName = userName;
       userName = data;
-      let admin = ( () => {
-        if (userName.toLowerCase().includes('admin')) {
-          return 1;
-        } else if (userName.includes(' ')) {
-          return 2;
-        } else if ( checkForUser(userName) > -1 ) {
-          return 3;
-        } else {
-          return false;
-        }
-      })();
-      if (admin !== false) {
-        connection.write(getMessage(admin));
+      let nameOK = checkNameStructure( userName );
+      if ( nameOK !== false ) {
+        connection.write(getMessage(nameOK));
         userName = oldName;
         return;
       }
@@ -151,5 +141,17 @@ function getMessage( num ) {
       return `[ADMIN] That name is taken! Please type a new name.`;
     default:
       return `[ADMIN] That is not a valid name! Please type a new name.`;
-    }
+  }
+}
+
+function checkNameStructure( userName ) {
+  if (userName.toLowerCase().includes('admin')) {
+      return 1;
+    } else if (userName.includes(' ')) {
+      return 2;
+    } else if ( checkForUser(userName) > -1 ) {
+      return 3;
+    } else {
+      return false;
+  }
 }
