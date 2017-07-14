@@ -40,19 +40,7 @@ var server = net.createServer( function ( connection ) {
         }
       })();
       if (admin !== false) {
-        switch (admin) {
-          case 1:
-            connection.write(`[ADMIN] User name cannot contain [admin]! Please type a new name.`);
-            break;
-          case 2:
-            connection.write(`[ADMIN] User name cannot contain spaces! Please type a new name.`);
-            break;
-          case 3:
-            connection.write(`[ADMIN] That name is taken! Please type a new name.`);
-            break;
-          default:
-            connection.write(`[ADMIN] That is not a valid name! Please type a new name.`);
-        }
+        connection.write(getMessage(admin));
         userName = oldName;
         return;
       }
@@ -100,13 +88,13 @@ server.listen({ port: 6969, address: '0.0.0.0' });
 process.stdin.on('data', data  => {
   data = String(data).replace(/\r?\n|\r/, '');
   if (data.indexOf('\\kick') !== -1) {
-    let parseData = data.split(' ');
-    if (parseData[1].includes(':')){
+    if (data.includes(':')){
       let ip = parseData[1].split(':');
       let port = ip[1];
       removePort( port );
       data = `User ${port} has been ousted!`;
     } else {
+      let parseData = data.split(' ');
       let user = parseData[1];
       let idx = checkForUser( user );
       if ( idx > -1 ) {
@@ -144,12 +132,24 @@ function removePort( port ) {
   port = Number(port);
   for (let connections in serverArray){
     skt = serverArray[connections].socket;
-    console.log('port 1 \'', typeof skt.remotePort, '\' port 2 \'', typeof port, '\'');
     if (skt.remotePort === port ) {
-      skt.write( `[ADMIN] You're outta here, ${port}!`);
+      skt.write( `[ADMIN] You're outta here, ${skt.name}!`);
       skt.destroy();
       serverArray.splice(i);
     }
     i++;
   }
+}
+
+function getMessage( num ) {
+  switch ( num ) {
+    case 1:
+      return `[ADMIN] User name cannot contain [admin]! Please type a new name.`;
+    case 2:
+      return `[ADMIN] User name cannot contain spaces! Please type a new name.`;
+    case 3:
+      return `[ADMIN] That name is taken! Please type a new name.`;
+    default:
+      return `[ADMIN] That is not a valid name! Please type a new name.`;
+    }
 }
